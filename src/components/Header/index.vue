@@ -1,5 +1,6 @@
 <template>
     <header id="header">
+        <i v-if="back" class="iconfont icon-right" @touchstart="goBack"></i>
         <h1>{{title}}</h1>
     </header>
 </template>
@@ -11,6 +12,13 @@ export default {
         title: {
             type: String,
             default: '中华小当家',
+        },
+        back: {
+            type: Boolean,
+            default: false,
+        },
+        goBack: {
+            type: Function,
         }
     }
 }

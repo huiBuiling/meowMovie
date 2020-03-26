@@ -8,7 +8,7 @@
             >
                 <ul>
                     <p class="msg">{{ pullDownMsg }}</p>
-                    <li v-for="item in soonList" :key="item.id">
+                    <li v-for="item in soonList" :key="item.id" @tap="goToDetail(item.id)">
                         <div class="pic_show"><img :src="item.img | setWH('128.180')"></div>
                         <div class="info_list">
                             <h2>{{item.nm}} <img v-if="item.version" src="@/assets/maxs.png"></h2>
@@ -65,7 +65,11 @@ export default {
         },
         handleTouchEnd(msg) {
             this.pullDownMsg = msg;
-        }
+        },
+        goToDetail(movieId) {
+            this.$router.push('/movie/detail/' + movieId);
+
+        },
     }
 }
 </script>

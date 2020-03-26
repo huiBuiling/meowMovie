@@ -26,6 +26,15 @@ const routes = [
         component: () => import('@/components/movies/Search'),
       },
       {
+        path: 'detail/:movieId',
+        components: {
+          detail: () => import('@/views/Detail'),
+        },
+        props: {
+          detail: true
+        }
+      },
+      {
         path: '/movie',
         redirect: '/movie/nowShowing',
       }

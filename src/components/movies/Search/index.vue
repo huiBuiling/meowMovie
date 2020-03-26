@@ -25,7 +25,7 @@
 
 <script>
 export default {
-    name: 'City',
+    name: 'Search',
     data() {
         return {
             val: '',

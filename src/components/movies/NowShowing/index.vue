@@ -15,9 +15,9 @@
         >
             <ul>
                 <p class="msg">{{ pullDownMsg }}</p>
-                <li v-for="item in hotList" :key="item.id">
+                <li v-for="item in hotList" :key="item.id"  @tap="goToDetail(item.id)">
                     <div class="pic_show">
-                        <img :src="item.img | setWH('128.180')"  @tap="goToDetail">
+                        <img :src="item.img | setWH('128.180')">
                     </div>
                     <div class="info_list">
                         <h2>
@@ -90,8 +90,9 @@ export default {
                 
             });
         },
-        goToDetail() {
-            alert(111)
+        goToDetail(movieId) {
+            this.$router.push('/movie/detail/' + movieId);
+
         },
         handleScroll(msg) {
             this.pullDownMsg = msg;
