@@ -35,7 +35,14 @@ export default {
     }
 }
 </script>
-
+    
 <style>
-
+    #content{ 
+        flex:1;
+        overflow:auto;
+        margin-bottom: 50px;
+        position: relative;
+        display: flex; 
+        flex-direction:column;
+    }
 </style>

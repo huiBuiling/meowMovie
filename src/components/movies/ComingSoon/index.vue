@@ -1,41 +1,72 @@
 <template>
     <div class="movie_body">
-        <ul>
-            <li v-for="item in soonList" :key="item.id">
-                <div class="pic_show"><img :src="item.img | setWH('128.180')"></div>
-                <div class="info_list">
-                    <h2>{{item.nm}} <img v-if="item.version" src="@/assets/maxs.png"></h2>
-                    <p><span class="person">{{item.wish}}</span> 人想看</p>
-                    <p>主演: {{item.star}}</p>
-                    <p>{{item.rt}}上映</p>
-                </div>
-                <div class="btn_pre">
-                    预售
-                    <!-- {{!item.preShow ? '预售' : '上映'}} -->
-                </div>
-            </li>
-        </ul>
+        <Loading v-if="isLoading" />
+            <Scroller 
+                v-else
+                :handleScroll = "handleScroll"
+                :handleTouchEnd = "handleTouchEnd"
+            >
+                <ul>
+                    <p class="msg">{{ pullDownMsg }}</p>
+                    <li v-for="item in soonList" :key="item.id">
+                        <div class="pic_show"><img :src="item.img | setWH('128.180')"></div>
+                        <div class="info_list">
+                            <h2>{{item.nm}} <img v-if="item.version" src="@/assets/maxs.png"></h2>
+                            <p><span class="person">{{item.wish}}</span> 人想看</p>
+                            <p>主演: {{item.star}}</p>
+                            <p>{{item.rt}}上映</p>
+                        </div>
+                        <div class="btn_pre">
+                            预售
+                            <!-- {{!item.preShow ? '预售' : '上映'}} -->
+                        </div>
+                    </li>
+                </ul>
+            </Scroller>
         </div>
 </template>
 
 <script>
-// 即将上映
+import Scroller from '@/components/Scroller';
+import Loading from '@/components/Loading';
+
 export default {
-    name: 'ComingSoon',
+    name: 'ComingSoon', 
+    components: {
+        Scroller,
+        Loading,
+    },
     data() {
         return {
-            soonList: []
+            soonList: [],
+            pullDownMsg: '',
+            isLoading: true,
+            prevCityId: -1,
         }
     },
-    mounted() {
-        this.axios.get('/api/movieComingList?cityId=10').then((res) => {
+    activated() {
+        const id = this.$store.state.city.id;
+        if(this.prevCityId === id) { return; }
+        console.log(24);
+
+        this.axios.get(`/api/movieComingList?cityId=${id}`).then((res) => {
             if(res.data.msg == 'ok'){
                 const soonList = res.data.data.comingList;
                 this.soonList = soonList;
+                this.isLoading = false;
+                this.prevCityId = id;
             }
             
         });
     },
+    methods: {
+        handleScroll(msg) {
+            this.pullDownMsg = msg;
+        },
+        handleTouchEnd(msg) {
+            this.pullDownMsg = msg;
+        }
+    }
 }
 </script>
 
@@ -46,6 +77,10 @@ export default {
     ul{ 
         margin:0 12px;
         overflow: hidden;
+        .msg{
+            text-align: center;
+            line-height: 60px;
+        }
         li{ 
             margin-top:12px;
             display: flex;

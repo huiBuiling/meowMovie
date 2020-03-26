@@ -1,40 +1,122 @@
 <template>
-  <div class="movie_body">
-        <ul>
-            <li v-for="item in hotList" :key="item.id">
-                <div class="pic_show"><img :src="item.img | setWH('128.180')"></div>
-                <div class="info_list">
-                    <h2>{{item.nm}} <img v-if="item.version" src="@/assets/maxs.png"></h2>
-                    <p>观众评 <span class="grade">{{item.sc}}</span></p>
-                    <p>主演: {{item.star}}</p>
-                    <p>今天{{item.showst}}家影院放映{{item.wishst}}场</p>
-                </div>
-                <div class="btn_mall">
-                    购票
-                </div>
-            </li>
-        </ul>
+    <div class="movie_body">
+        <Model 
+            v-if="isModel"
+            :city="city.nm"
+            :modelCancel="modelCancel"
+            :modelOk="modelOk"
+         />
+
+        <Loading v-if="!isModel && isLoading" />
+        <Scroller 
+            v-else
+            :handleScroll = "handleScroll"
+            :handleTouchEnd = "handleTouchEnd"
+        >
+            <ul>
+                <p class="msg">{{ pullDownMsg }}</p>
+                <li v-for="item in hotList" :key="item.id">
+                    <div class="pic_show">
+                        <img :src="item.img | setWH('128.180')"  @tap="goToDetail">
+                    </div>
+                    <div class="info_list">
+                        <h2>
+                            {{item.nm}} 
+                            <img v-if="item.version" src="@/assets/maxs.png">
+                        </h2>
+                        <p>观众评 <span class="grade">{{item.sc}}</span></p>
+                        <p>主演: {{item.star}}</p>
+                        <p>今天{{item.showst}}家影院放映{{item.wishst}}场</p>
+                    </div>
+                    <div class="btn_mall" @click="goToDetail">
+                        购票
+                    </div>
+                </li>
+            </ul>
+        </Scroller>
     </div>
 </template>
 
 <script>
-// 正在热映
+import Scroller from '@/components/Scroller';
+import Loading from '@/components/Loading';
+import Model from '@/components/Model'
+
 export default {
-    name: 'nowShowing',
+    name: 'NowShowing', // 正在热映
+    components: {
+        Scroller,
+        Loading,
+        Model,
+    },
     data() {
         return {
-           hotList: []
+           hotList: [],
+           pullDownMsg: '',
+           isModel: false,
+           isLoading: false,
+           prevCityId: -1,
+           city: {},
         }
     },
-    mounted() {
-        this.axios.get('/api/movieOnInfoList?cityId=10').then((res) => {
-            if(res.data.msg == 'ok'){
-                const hotList = res.data.data.movieList;
-                this.hotList = hotList;
-            }
-            
-        });
+    activated() {
+        this.positioning();
     },
+    methods: {
+        positioning() {
+            // setTimeout(() =>{
+                this.axios.get('/api/getLocation').then((res) => {
+                    if(res.data.msg == 'ok'){
+                        this.city = res.data.data;
+                        this.isModel = true;
+                        console.log(this.city.nm)
+                        this.getList();
+                    }
+                });
+            // }, 3000);
+        },
+        getList() {
+            const id = this.$store.state.city.id;
+            if(this.city === id) { return; }
+            if(this.prevCityId === id) { return; }
+            this.isLoading = true;
+            this.axios.get(`/api/movieOnInfoList?cityId=${id}`).then((res) => {
+                if(res.data.msg == 'ok'){
+                    const hotList = res.data.data.movieList;
+                    this.hotList = hotList;
+                    this.isLoading = false;
+                    this.prevCityId = id;
+                }
+                
+            });
+        },
+        goToDetail() {
+            alert(111)
+        },
+        handleScroll(msg) {
+            this.pullDownMsg = msg;
+        },
+        handleTouchEnd(msg) {
+            this.pullDownMsg = msg;
+        },
+        modelCancel() {
+            this.isModel = false;
+        },
+        modelOk() {
+            const id = this.city.id;
+            this.isModel = false;
+            this.isLoading = true;
+            this.axios.get(`/api/movieOnInfoList?cityId=${id}`).then((res) => {
+                if(res.data.msg == 'ok'){
+                    const hotList = res.data.data.movieList;
+                    this.hotList = hotList;
+                    this.isLoading = false;
+                    this.prevCityId = id;
+                    this.$store.commit('city/CITY_INFO', this.city)
+                }
+            });
+        }
+    }
 }
 </script>
 
@@ -45,6 +127,10 @@ export default {
     ul{ 
         margin:0 12px;
         overflow: hidden;
+        .msg{
+            text-align: center;
+            line-height: 60px;
+        }
         li{ 
             margin-top:12px;
             display: flex;
