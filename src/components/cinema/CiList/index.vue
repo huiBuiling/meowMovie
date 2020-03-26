@@ -1,43 +1,60 @@
 <template>
     <div class="cinema_body">
-        <ul>
-            <li v-for="item in cinemaData" :key="item.id">
-                <div>
-                    <span>{{item.nm}}</span>
-                    <span class="q"><span class="price">{{item.sellPrice}}</span> 元起</span>
-                </div>
-                <div class="address">
-                    <span>{{item.addr}}</span>
-                    <span>{{item.distance}}</span>
-                </div>
-                <div class="card">
-                    <div 
-                    v-for="(itemT, index) in formatData(item.tag)" 
-                    :key="index"
-                    :class="index | formatVal('class')"
-                    >
-                        {{index | formatVal('value')}}
+        <Scroller 
+            :handleScroll = "handleScroll"
+            :handleTouchEnd = "handleTouchEnd"
+        >
+            <ul>
+                <p class="msg">{{ pullDownMsg }}</p>
+                <li v-for="item in cinemaData" :key="item.id">
+                    <div>
+                        <span>{{item.nm}}</span>
+                        <span class="q"><span class="price">{{item.sellPrice}}</span> 元起</span>
                     </div>
-                </div>
-            </li>
-        </ul>
+                    <div class="address">
+                        <span>{{item.addr}}</span>
+                        <span>{{item.distance}}</span>
+                    </div>
+                    <div class="card">
+                        <div 
+                            v-for="(itemT, index) in formatData(item.tag)" 
+                            :key="index"
+                            :class="index | formatVal('class')"
+                        >
+                            {{index | formatVal('value')}}
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </Scroller>
     </div>
 </template>
 
 <script>
+import Scroller from '@/components/Scroller';
+
 export default {
-    name: 'CiList',
+    name: 'CiList',  // 影院列表
+    components: {
+        Scroller,
+    },
     data() {
         return {
-            cinemaData: []
+            cinemaData: [],
+            pullDownMsg: '',
+            prevCityId: -1,
         }
     },
-    mounted() {
-        this.axios.get('/api/cinemaList?cityId=10').then((res) => {
+    activated() {
+        const id = this.$store.state.city.id;
+        if(this.prevCityId === id) { return; }
+        console.log(25);
+
+        this.axios.get(`/api/cinemaList?cityId=${id}`).then((res) => {
             if(res.data.msg == 'ok'){
                 const cinemaData = res.data.data.cinemas;
                 this.cinemaData = cinemaData;
-                console.log(cinemaData);
+                this.prevCityId = id;
             }
         })
     },
@@ -50,6 +67,15 @@ export default {
                 }
             }
             return newData;
+        },
+        goToDetail() {
+            console.log(1111)
+        },
+        handleScroll(msg) {
+            this.pullDownMsg = msg;
+        },
+        handleTouchEnd(msg) {
+            this.pullDownMsg = msg;
         }
     },
     filters: {
@@ -78,7 +104,11 @@ export default {
     flex:1;
     overflow:auto;
     ul{ 
-        padding:20px;
+        padding:0 20px;
+        .msg{
+            text-align: center;
+            line-height: 60px;
+        }
         li{ 
             border-bottom:1px solid #e6e6e6; margin-bottom: 20px;
         }

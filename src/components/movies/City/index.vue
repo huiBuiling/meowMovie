@@ -1,24 +1,37 @@
 <template>
     <div class="city_body">
         <div class="city_list">
-            <div class="city_hot">
-                <h2>热门城市</h2>
-                <ul class="clearfix">
-                    <li v-for="itemH in hotData" :key="itemH.id">{{itemH.nm}}</li>
-                </ul>
-            </div>
-            <div class="city_sort" ref="city_sort">
-                <div v-for="itemC in cityData" :key="itemC.index">
-                    <h2>{{itemC.index}}</h2>
-                    <ul>
-                        <li v-for="itemN in itemC.list" :key="itemN.id">{{itemN.nm}}</li>
-                    </ul>
+            <Loading v-if="isLoading" />
+            <Scroller v-else ref="city_list">
+                <div>
+                    <div class="city_hot">
+                        <h2>热门城市</h2>
+                        <ul class="clearfix">
+                            <li 
+                                v-for="itemH in hotData" 
+                                :key="itemH.id" 
+                                @tap="setCity({nm: itemH.nm, id: itemH.id})"
+                            >{{itemH.nm}}</li>
+                        </ul>
+                    </div>
+                    <div class="city_sort" ref="city_sort">
+                        <div v-for="itemC in cityData" :key="itemC.index">
+                            <h2>{{itemC.index}}</h2>
+                            <ul>
+                                <li 
+                                    v-for="itemN in itemC.list" 
+                                    :key="itemN.id"
+                                    @tap="setCity({nm: itemN.nm, id: itemN.id})"
+                                >{{itemN.nm}}</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </Scroller>
         </div>
         <div class="city_index">
             <ul>
-                <li v-for="(itemC, index) in cityData" :key="itemC.index" @touchstart= "handleToIndex(index)">
+                <li v-for="(itemC, index) in cityData" :key="itemC.index" @click="handleToIndex(index)">
                     {{itemC.index}}
                 </li>
             </ul>  
@@ -27,22 +40,39 @@
 </template>
 
 <script>
+import Scroller from '@/components/Scroller';
+import Loading from '@/components/Loading';
+import storage from '@/tools/localStorage';
+
 export default {
     name: 'City',
+    components: {
+        Scroller,
+        Loading,
+    },
     data() {
         return {
             cityData: [],
             hotData: [],
+            isLoading: true,
         }
     },
     mounted() {
-        this.axios.get('/api/cityList').then((res)=>{
-            if(res.data.msg == 'ok'){
-                const cityData = res.data.data.cities;
-                this.formatCityList(cityData);
-            }
-            
-        })
+        const cityDatas = storage.get('cityData');
+        const hotDatas = storage.get('hotData');
+        if(cityDatas && hotDatas) {
+            this.cityData = JSON.parse(cityDatas);
+            this.hotData = JSON.parse(hotDatas);
+            this.isLoading = false;
+        }else {
+            this.axios.get('/api/cityList').then((res)=>{
+                if(res.data.msg == 'ok'){
+                    const newCityData = res.data.data.cities;
+                    this.formatCityList(newCityData);
+                    this.isLoading = false;
+                }
+            })
+        }
     },
     methods: {
         // 城市数据及索引
@@ -98,13 +128,20 @@ export default {
 
             this.cityData = cityList;
             this.hotData = hotList;
+
+            storage.set('cityData', JSON.stringify(cityList));
+            storage.set('hotData', JSON.stringify(hotList));
         },
         // 索引滚动对应位置事件
         handleToIndex(index) {
-            const cityS = this.$refs.city_sort;
-            const h2 = cityS.getElementsByTagName('h2');
+            const h2 = this.$refs.city_sort.getElementsByTagName('h2');      
             const top = h2[index].offsetTop;
-            cityS.parentNode.scrollTop = top;
+            this.$refs.city_list.goToLocation(-top);
+        },
+        setCity(data) {
+            this.$store.commit('city/CITY_INFO', data);
+            this.$router.push('/movie/nowShowing');
+            storage.set('curCity', JSON.stringify(data) );
         }
 
     }

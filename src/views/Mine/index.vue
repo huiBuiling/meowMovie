@@ -1,6 +1,6 @@
 <template>
     <div id="main">
-        <Header title="title" />
+        <Header :title="title" />
 
         <div id="content">
 			<div class="login_body">
@@ -34,7 +34,15 @@ export default {
         TabBar
     },
     data() {
-        title: '登录喵喵'
+        return {
+            title: '登录喵喵',
+        }
+        
+    },
+    methods: {
+        sign() {
+            alert('sign')
+        }
     }
 }
 </script>
